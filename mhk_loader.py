@@ -36,7 +36,7 @@ from socket import socket
 from time import sleep
 
 
-__version__ = "0.0.0"
+__version__ = "0.1.5"
 
 
 def arg_parse():
@@ -153,12 +153,12 @@ def upload_api(value):
     """Format datas for tastiepy
     """
     data = {"value": value['value'],
-            "datetms": value['datetms'], 
-            "name": value['name'], 
+            "datetms": value['datetms'],
+            "name": value['name'],
             "run": "/api/v1/run/{}/".format(value['run'])}
 
     return data
-    
+
 def post(mdata, auth, address):
     """
     Call Maheki API
@@ -188,11 +188,11 @@ def api_get(address, auth, ressource, rid):
     parms = {'username': auth['username'],
              'api_key': auth['key']}
 
-    url = '{}{}/{}/?{}'.format(address, 
+    url = '{}{}/{}/?{}'.format(address,
                                ressource,
                                rid,
                                urllib.urlencode(parms))
-    
+
     response = requests.get(url,
                             headers={'content-type': 'application/json'})
 
@@ -260,7 +260,7 @@ def main():
     options = arg_parse()
     check_options(options)
     auth = build_auth(options)
-    
+
     address = "{}://{}:{}{}".format(options.protocol,
                                     options.hostname,
                                     options.port,
