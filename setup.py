@@ -36,8 +36,8 @@ setup(
     author="Rodolphe Quiédeville",
     author_email="rodolphe@quiedeville.org",
     url="https://github.com/rodo/mhk_loader",
-    requires=['requests'],
-    install_requires=['requests'],
+    requires=['requests',],
+    install_requires=['requests',],
     classifiers = [
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
