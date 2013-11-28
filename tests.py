@@ -53,6 +53,15 @@ class TestSequenceFunctions(unittest.TestCase):
 
         self.assertEqual(attend, auth)
 
+    def test_is_logfile(self):
+        self.assertTrue(mhk.is_logfile('tsung1@pyrede.log'))
+        self.assertTrue(mhk.is_logfile('tsung2@hypadrie.log'))
+        self.assertTrue(mhk.is_logfile('tsung_foo_0@pyrede.log'))
+        self.assertFalse(mhk.is_logfile('tsung_controller@jenkins.log'))
+        self.assertFalse(mhk.is_logfile('tsung.dump'))
+        self.assertFalse(mhk.is_logfile('tsung-fullstats.log'))
+        self.assertFalse(mhk.is_logfile('tsung.log'))
+
 
 if __name__ == '__main__':
     unittest.main()

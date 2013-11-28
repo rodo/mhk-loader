@@ -204,13 +204,9 @@ def api_get(address, auth, ressource, rid):
         sys.exit(1)
 
 
-def process(options, auth, url, run):
-    if options.infile is not None:
-        if not os.path.exists(options.infile):
-            sys.exit(1)
-        else:
-            # parse file and return nodes
-            starts, stops = parse_file(options.infile)
+def process(filename, auth, url, run):
+
+    starts, stops = parse_file(filename)
 
     if len(starts) > 0:
         print len(starts), len(stops)
@@ -255,6 +251,32 @@ def check_run(run):
         sys.exit()
 
 
+def logfiles():
+    """Return all the logfiles name in an array
+    """
+    fnames = []
+    for filename in os.listdir('.'):
+        if is_logfile(filename):
+            fnames.append(filename)
+
+    return fnames
+
+def is_logfile(fname):
+    if fname.endswith('.log') and fname.startswith('tsung'):
+        if fname == 'tsung.log':
+            return False
+        elif fname == 'tsung-fullstats.log':
+            return False
+        else:
+            parts = fname.split('@')
+            if parts[0] == "tsung_controller":
+                return False
+            else:
+                return True
+    else:
+        return False
+
+
 def main():
     """Main programm"""
     options = arg_parse()
@@ -269,7 +291,8 @@ def main():
     run = api_get(address, auth, "run", options.run)
     check_run(run)
 
-    process(options, auth, address, options.run)
+    for fname in logfiles():
+        process(fname, auth, address, options.run)
 
 
 if __name__ == '__main__':
