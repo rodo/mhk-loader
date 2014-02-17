@@ -36,7 +36,7 @@ from socket import socket
 from time import sleep
 
 
-__version__ = "0.1.5"
+__version__ = "0.2.0"
 
 
 def arg_parse():
@@ -52,7 +52,7 @@ def arg_parse():
                       help="api username",
                       default=None)
     parser.add_option("-a", "--api", dest="api",
-                      help="api username",
+                      help="api path",
                       default="/api/v1/")
     parser.add_option("-k", "--key", dest="key",
                       help="api key",
@@ -62,6 +62,9 @@ def arg_parse():
                       default=None)
     parser.add_option("-r", "--run", dest="run",
                       help="run id",
+                      default=None)
+    parser.add_option("-b", "--bench", dest="bench",
+                      help="bench id",
                       default=None)
     parser.add_option("-p", "--port", dest="port",
                       help="maheki port",
@@ -83,7 +86,7 @@ def check_options(options):
         print """Input file is required, use -i on command line"""
         sys.exit(1)
 
-    if options.run is None:
+    if options.run and options.bench is None:
         print """Run id is mandatory, use -r on command line"""
         sys.exit(1)
 
@@ -97,6 +100,7 @@ def parse_file(fpath):
 
     Return a json object
     """
+    print "Parse file : {}\n".format(fpath)
     starg = "ts_client:\((\d+:<\d+.\d+.\d+>)\) Starting new transaction (\w+) \(now{(\d+),(\d+),(\d+)}\)"
     stprg = "ts_client:\((\d+:<\d+.\d+.\d+>)\) Stopping transaction (\w+) \({(\d+),(\d+),(\d+)}\)"
     starts = []
@@ -111,8 +115,7 @@ def parse_file(fpath):
             rgx = re.compile(starg)
             match = rgx.search(alpha)
             transac = match.group(2)
-            time = "{}{}".format(match.group(3),
-                                    match.group(4))
+            time = "{}{}".format(match.group(3), match.group(4))
             micro = "{}".format(match.group(5))
             key = match.group(1)
 
@@ -150,7 +153,7 @@ def parse_file(fpath):
     return starts, stops
 
 def upload_api(value):
-    """Format datas for tastiepy
+    """Format datas for tastypie
     """
     data = {"value": value['value'],
             "datetms": value['datetms'],
@@ -178,7 +181,7 @@ def post(mdata, auth, address):
         sys.stdout.write(".")
         sys.stdout.flush()
     else:
-        print response.status_code, url
+        print response.status_code, url, data
         sys.exit(1)
 
 def api_get(address, auth, ressource, rid):
@@ -204,13 +207,15 @@ def api_get(address, auth, ressource, rid):
         sys.exit(1)
 
 
-def process(options, auth, url, run):
-    if options.infile is not None:
-        if not os.path.exists(options.infile):
+def process(fpath, auth, url, run):
+    """Process a file
+    """
+    if fpath is not None:
+        if not os.path.exists(fpath):
             sys.exit(1)
         else:
             # parse file and return nodes
-            starts, stops = parse_file(options.infile)
+            starts, stops = parse_file(fpath)
 
     if len(starts) > 0:
         print len(starts), len(stops)
@@ -242,7 +247,6 @@ def build_auth(options):
 def check_run(run):
     """Check is the returned run is valid
     """
-    print run
     try:
         data = json.loads(run)
     except:
@@ -255,6 +259,62 @@ def check_run(run):
         sys.exit()
 
 
+def newrun(bench, code, address, auth):
+    """
+    rodo@elz:~$ curl --dump-header - -H "Content-Type: application/json" -X POST --data '{"start": "2013-04-02 18:40", "stop": "2013-04-0219:40", "bench": "/api/v1/bench/1/" }' http://127.0.0.1:8000/api/v1/run/
+    """
+    rid = None
+    print "Newrun"
+
+    data = {"start": "2013-04-02 18:40",
+            "stop": "2013-04-02 19:40",
+            "code": code,
+            "bench": "/api/v1/bench/{}/".format(bench)}
+
+
+    parms = {'username': auth['username'],
+             'api_key': auth['key']}
+
+    url = '{}run/?{}'.format(address, urllib.urlencode(parms))
+
+    response = requests.post(url,
+                             data=json.dumps(data),
+                             headers={'content-type': 'application/json'})
+
+    if response.status_code == 201:
+        loc = response.headers['location']
+        rid = loc.split('/')[-2]
+        sys.stdout.write(".")
+        sys.stdout.flush()
+    else:
+        print response.content, json.dumps(data)
+        print response.status_code, url
+        sys.exit(1)
+
+    return rid
+
+def getfilenames(dpath):
+    """Return the code and filenames from directory name
+    """
+    files = []
+    if not dpath.endswith('/'):
+        dpath = "{}/".format(dpath)
+
+    if os.path.isdir(dpath):
+        code = os.path.basename(os.path.dirname(dpath))
+
+        allfiles = os.listdir(dpath)
+        pattern = "tsung\d+.*\.log$"
+        rgx = re.compile(pattern)
+        for fname in allfiles:
+            if re.match(rgx, fname):
+                files.append(os.path.join(dpath, fname))
+
+        return code, files
+    else:
+        print "Error infile is not a directory"
+        sys.exit(1)
+
 def main():
     """Main programm"""
     options = arg_parse()
@@ -266,10 +326,17 @@ def main():
                                     options.port,
                                     options.api)
 
-    run = api_get(address, auth, "run", options.run)
-    check_run(run)
+    run_code, files = getfilenames(options.infile)
 
-    process(options, auth, address, options.run)
+    run_id = newrun(options.bench, run_code, address, auth)
+
+    if run_id:
+        run = api_get(address, auth, "run", run_id)
+
+        check_run(run)
+
+        for fpath in files:
+            process(fpath, auth, address, run_id)
 
 
 if __name__ == '__main__':
