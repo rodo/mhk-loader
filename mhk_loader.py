@@ -207,6 +207,7 @@ def api_get(address, auth, ressource, rid):
         sys.exit(1)
 
 
+
 def process(fpath, auth, url, run):
     """Process a file
     """
@@ -216,6 +217,7 @@ def process(fpath, auth, url, run):
         else:
             # parse file and return nodes
             starts, stops = parse_file(fpath)
+
 
     if len(starts) > 0:
         print len(starts), len(stops)
@@ -287,8 +289,7 @@ def newrun(bench, code, address, auth):
         sys.stdout.write(".")
         sys.stdout.flush()
     else:
-        print response.content, json.dumps(data)
-        print response.status_code, url
+        print "Can't create run, error {}".format(response.status_code)
         sys.exit(1)
 
     return rid
@@ -296,24 +297,28 @@ def newrun(bench, code, address, auth):
 def getfilenames(dpath):
     """Return the code and filenames from directory name
     """
-    files = []
     if not dpath.endswith('/'):
         dpath = "{}/".format(dpath)
 
     if os.path.isdir(dpath):
         code = os.path.basename(os.path.dirname(dpath))
-
         allfiles = os.listdir(dpath)
-        pattern = "tsung\d+.*\.log$"
-        rgx = re.compile(pattern)
-        for fname in allfiles:
-            if re.match(rgx, fname):
-                files.append(os.path.join(dpath, fname))
-
-        return code, files
+        return code, logfiles(allfiles, dpath)
     else:
         print "Error infile is not a directory"
         sys.exit(1)
+
+def logfiles(files, dpath):
+    """
+    Return logfiles in an array of filenames
+    """
+    result = []
+    pattern = "tsung\d+.*\.log$"
+    rgx = re.compile(pattern)
+    for fname in files:
+        if re.match(rgx, fname):
+            result.append(os.path.join(dpath, fname))
+    return result
 
 def main():
     """Main programm"""
@@ -337,6 +342,7 @@ def main():
 
         for fpath in files:
             process(fpath, auth, address, run_id)
+
 
 
 if __name__ == '__main__':

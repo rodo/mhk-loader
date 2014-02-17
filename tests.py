@@ -20,7 +20,7 @@
 """
 tsung2graphite.py reads tsung's log in json format, export datas to graphite
 server.
-Your tsung scenario must begin with option backend="json" to force 
+Your tsung scenario must begin with option backend="json" to force
 tsung dumping log data in json format instead of tsung native format :
 
 <tsung loglevel="notice" dumptraffic="false" version="1.0" backend="json">
@@ -32,13 +32,14 @@ import mhk_loader as mhk
 import json
 import tempfile
 
+
 class FooOpt():
     def init(self):
         self.user = "toto"
         self.key = "papa"
 
-class TestSequenceFunctions(unittest.TestCase):
 
+class TestSequenceFunctions(unittest.TestCase):
 
     def test_build_auth(self):
         #
@@ -52,6 +53,34 @@ class TestSequenceFunctions(unittest.TestCase):
         auth = mhk.build_auth(datas)
 
         self.assertEqual(attend, auth)
+
+    def test_logfiles(self):
+        datas = ['tsung.log', 'tsung0@pyrede.log',
+                 'tsung-fullstats.log', 'tsung1@hypadrie.log',
+                 'tsung.dump', 'osmpule.xml',
+                 'match.log', 'tsung_controller@jenkins.log']
+        result = mhk.logfiles(datas, "")
+
+        attend = ['tsung0@pyrede.log', 'tsung1@hypadrie.log']
+
+        self.assertEqual(result, attend)
+
+    def test_logfiles_path(self):
+        datas = ['tsung.log', 'tsung0@pyrede.log',
+                 'tsung-fullstats.log', 'tsung1@hypadrie.log',
+                 'tsung.dump', 'osmpule.xml',
+                 'match.log', 'tsung_controller@jenkins.log']
+        result = mhk.logfiles(datas, "/tmp")
+
+        attend = ['/tmp/tsung0@pyrede.log', '/tmp/tsung1@hypadrie.log']
+
+        self.assertEqual(result, attend)
+
+    def test_logfiles_empty(self):
+        datas = []
+        result = mhk.logfiles(datas, "")
+        attend = []
+        self.assertEqual(result, attend)
 
 
 if __name__ == '__main__':
