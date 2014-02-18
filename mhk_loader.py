@@ -39,7 +39,7 @@ from time import sleep
 __version__ = "0.2.1"
 
 
-def arg_parse():
+def arg_parse(args):
     """ Parse command line arguments """
     arg_list = "-i FILENAME -u USER -k APIKEY -s SERVER [-vh]"
     usage = "Usage: %prog " + arg_list
@@ -52,7 +52,6 @@ def arg_parse():
     protocol = 'http'
     if os.getenv('MAHEKI_PROTOCOL') is not None:
         protocol = os.getenv('MAHEKI_PROTOCOL')
-
 
     parser.add_option("-a", "--api", dest="api",
                       help="api path",
@@ -86,7 +85,7 @@ def arg_parse():
                       help="be verbose",
                       default=False)
 
-    return parser.parse_args()[0]
+    return parser.parse_args(args)[0]
 
 
 def check_options(options):
@@ -329,7 +328,7 @@ def logfiles(files, dpath):
 
 def main():
     """Main programm"""
-    options = arg_parse()
+    options = arg_parse(sys.argv)
     check_options(options)
     auth = build_auth(options)
 

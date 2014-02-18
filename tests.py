@@ -31,6 +31,7 @@ import unittest
 import mhk_loader as mhk
 import json
 import tempfile
+import os
 
 
 class FooOpt():
@@ -40,6 +41,16 @@ class FooOpt():
 
 
 class TestSequenceFunctions(unittest.TestCase):
+
+    def setUp(self):
+        """
+        Unset env var
+        """
+        if 'MAHEKI_PORT' in os.environ:
+            del os.environ["MAHEKI_PORT"]
+        if 'MAHEKI_PROTOCOL' in os.environ:
+            del os.environ["MAHEKI_PROTOCOL"]
+
 
     def test_build_auth(self):
         #
@@ -82,6 +93,44 @@ class TestSequenceFunctions(unittest.TestCase):
         attend = []
         self.assertEqual(result, attend)
 
+    def test_arg_parse(self):
+        """
+        Command line options
+        """
+        opt = mhk.arg_parse(["foo"])
+        self.assertEqual(opt.infile, None)
+        self.assertEqual(opt.port, 80)
+
+    def test_arg_parse_port(self):
+        """
+        Command line options
+        """
+        opt = mhk.arg_parse(["foo","-p","870"])
+        self.assertEqual(opt.port, "870")
+
+    def test_arg_parse_protocol(self):
+        """
+        Command line options
+        """
+        opt = mhk.arg_parse(["foo","--protocol","https"])
+        self.assertEqual(opt.protocol, "https")
+
+    def test_upload_api(self):
+
+        data = {"value": 123,
+                "datetms": 123456789,
+                "name": "foo",
+                "run": 1}
+
+        result = {"value": data['value'],
+                  "datetms": data['datetms'],
+                  "name": data['name'],
+                  "run": "/api/v1/run/{}/".format(data['run'])}
+
+        self.assertEqual(mhk.upload_api(data), result)
+
 
 if __name__ == '__main__':
-    unittest.main()
+    runner = unittest.TextTestRunner()
+    itersuite = unittest.TestLoader().loadTestsFromTestCase(TestSequenceFunctions)
+    runner.run(itersuite)
