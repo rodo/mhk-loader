@@ -43,3 +43,5 @@ Tests
 To run test using nose and coverage
 
 $ nosetests tests.py --with-coverage --cover-package=mhk_loader
+
+[![Build Status](https://travis-ci.org/rodo/mhk-loader.png?branch=master)](https://travis-ci.org/rodo/mhk-loader)
