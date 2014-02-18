@@ -36,7 +36,7 @@ from socket import socket
 from time import sleep
 
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 
 def arg_parse():
