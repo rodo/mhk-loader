@@ -28,7 +28,7 @@ setup(
     extract from tsung log files (required loglevel=notice) and upload
     them to a maheki server installed on other server.
 
-* Maheki: http://github.com/rodo/maheki
+* Maheki: https://gitorious.org/maheki
 * Tsung : http://tsung.erlang-projects.org/
 
 """,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2013 Rodolphe Quiédeville <rodolphe@quiedeville.org>
+# Copyright (c) 2013,2014 Rodolphe Quiédeville <rodolphe@quiedeville.org>
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 """
 Maheki loader
 
-Tsung scenario must be configures with loglevel="notice"
+Tsung scenario must be configured with loglevel="notice"
 
 <tsung loglevel="notice" dumptraffic="false" version="1.0">
 
@@ -45,21 +45,30 @@ def arg_parse():
     usage = "Usage: %prog " + arg_list
     parser = OptionParser(usage, version=__version__)
 
+    port = 80
+    if os.getenv('MAHEKI_PORT') is not None:
+        port = os.getenv('MAHEKI_PORT')
+
+    protocol = 'http'
+    if os.getenv('MAHEKI_PROTOCOL') is not None:
+        protocol = os.getenv('MAHEKI_PROTOCOL')
+
+
+    parser.add_option("-a", "--api", dest="api",
+                      help="api path",
+                      default="/api/v1/")
     parser.add_option("-i", "--infile", dest="infile",
                       help="input file",
                       default=None)
     parser.add_option("-u", "--user", dest="user",
                       help="api username",
-                      default=None)
-    parser.add_option("-a", "--api", dest="api",
-                      help="api path",
-                      default="/api/v1/")
+                      default=os.getenv('MAHEKI_USER'))
     parser.add_option("-k", "--key", dest="key",
                       help="api key",
-                      default=None)
+                      default=os.getenv('MAHEKI_APIKEY'))
     parser.add_option("-s", "--server", dest="hostname",
                       help="maheki hostname",
-                      default=None)
+                      default=os.getenv('MAHEKI_HOST'))
     parser.add_option("-r", "--run", dest="run",
                       help="run id",
                       default=None)
@@ -68,10 +77,10 @@ def arg_parse():
                       default=None)
     parser.add_option("-p", "--port", dest="port",
                       help="maheki port",
-                      default=80)
+                      default=port)
     parser.add_option("--protocol", dest="protocol",
                       help="protocol http / https, default: http",
-                      default="http")
+                      default=protocol)
     parser.add_option("-v", "--verbose", dest="verbose",
                       action="store_true",
                       help="be verbose",
@@ -266,13 +275,11 @@ def newrun(bench, code, address, auth):
     rodo@elz:~$ curl --dump-header - -H "Content-Type: application/json" -X POST --data '{"start": "2013-04-02 18:40", "stop": "2013-04-0219:40", "bench": "/api/v1/bench/1/" }' http://127.0.0.1:8000/api/v1/run/
     """
     rid = None
-    print "Newrun"
 
     data = {"start": "2013-04-02 18:40",
             "stop": "2013-04-02 19:40",
             "code": code,
             "bench": "/api/v1/bench/{}/".format(bench)}
-
 
     parms = {'username': auth['username'],
              'api_key': auth['key']}
