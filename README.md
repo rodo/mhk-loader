@@ -2,7 +2,12 @@ Maheki loader
 =============
 
 mhk_loader.py reads a tsung.log files and upload datas to Maheki using
-it's API.
+it's API. By default mhk_loader use 5 threads to speed up upload
+
+Tsung scenario must be configured with loglevel="notice"
+
+<tsung loglevel="notice" dumptraffic="false" version="1.0">
+
 
 Maheki project
 ==============

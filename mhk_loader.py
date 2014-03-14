@@ -30,14 +30,78 @@ import os
 import re
 import urllib
 import requests
+import thread
+from threading import *
+import Queue
 from optparse import OptionParser
 import json
 from socket import socket
 from time import sleep
 
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
+
+class Synchro(Thread):
+
+    def __init__(self, mdatas, auth, address):
+        Thread.__init__(self)
+
+        self.mdatas=mdatas
+        self.auth=auth
+        self.address=address
+
+    def run(self):
+        self.post()
+
+    def post(self):
+        """
+        Call Maheki API
+        """
+        for mdata in self.mdatas:
+            data = json.dumps(self.upload_api(mdata))
+
+            parms = {'username': self.auth['username'], 'api_key': self.auth['key']}
+
+            url = '{}pom/?{}'.format(self.address, urllib.urlencode(parms))
+            response = requests.post(url,
+                                     data=data,
+                                     headers={'content-type': 'application/json'})
+
+            if response.status_code == 201:
+                sys.stdout.write(".")
+                sys.stdout.flush()
+            else:
+                print response.status_code, url, data
+                sys.exit(1)
+
+    def upload_api(self, value):
+        """Format datas for tastypie
+        """
+        data = {"value": value['value'],
+                "datetms": value['datetms'],
+                "name": value['name'],
+                "run": "/api/v1/run/{}/".format(value['run'])}
+        return data
+
+
+def uploadvalues(values, auth, url):
+    # post(value, auth, url)
+    nb = 5
+    i = 0
+
+    part = int(round(len(values) / nb))
+
+    while i < nb:
+        low = i * part
+        high = low + part
+        synchro=Synchro(values[low:high], auth, url)
+        synchro.start()
+        i= i + 1
+
+    if high < len(values):
+        synchro=Synchro(values[high:len(values)], auth, url)
+        synchro.start()
 
 def arg_parse(args):
     """ Parse command line arguments """
@@ -226,8 +290,8 @@ def process(fpath, auth, url, run):
             # parse file and return nodes
             starts, stops = parse_file(fpath)
 
-
     if len(starts) > 0:
+        values = []
         print len(starts), len(stops)
         while (len(starts)):
             start = starts.pop(0)
@@ -242,8 +306,10 @@ def process(fpath, auth, url, run):
                              "value": delta / 1000,
                              "datetms": stop['stop'],
                              "run": run}
-                    post(value, auth, url)
+                    values.append(value)
                     break
+
+        uploadvalues(values, auth, url)
     sys.stdout.write("\n")
     sys.stdout.flush()
 
@@ -271,8 +337,7 @@ def check_run(run):
 
 def newrun(bench, code, address, auth):
     """
-    rodo@elz:~$ curl --dump-header - -H "Content-Type: application/json" -X POST --data '{"start": "2013-04-02 18:40", "stop": "2013-04-0219:40", "bench": "/api/v1/bench/1/" }' http://127.0.0.1:8000/api/v1/run/
-    """
+    rodo@elz:~$ curl --dump-header - -H "Content-Type: application/json" -X POST --data '{"code": "20130402-1840", "start": "2013-04-02 18:40", "stop": "2013-04-0219:40", "bench": "/api/v1/bench/1/" }' http://127.0.0.1:8000/api/v1/run/  """
     rid = None
 
     data = {"start": "2013-04-02 18:40",
