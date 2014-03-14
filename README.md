@@ -38,7 +38,7 @@ on command line :
 Pypi package
 ============
 
-mhk_loader is availabla as a pypi package 
+mhk_loader is available as a pypi package 
 
 * https://pypi.python.org/pypi/mhk_loader/
 
