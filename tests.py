@@ -108,6 +108,14 @@ class TestSequenceFunctions(unittest.TestCase):
         opt = mhk.arg_parse(["foo","-p","870"])
         self.assertEqual(opt.port, "870")
 
+    def test_arg_parse_threads(self):
+        """
+        Command line options
+        """
+        opt = mhk.arg_parse(["foo","-t","870"])
+        self.assertEqual(opt.threads, 870)
+
+
     def test_arg_parse_protocol(self):
         """
         Command line options

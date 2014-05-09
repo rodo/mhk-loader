@@ -39,7 +39,7 @@ from socket import socket
 from time import sleep
 
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 
 class Synchro(Thread):
@@ -85,9 +85,12 @@ class Synchro(Thread):
         return data
 
 
-def uploadvalues(values, auth, url):
-    # post(value, auth, url)
-    nb = 5
+def uploadvalues(values, auth, url, nb_threads):
+    """Launch threads
+    """
+    # limit to 50 max threads
+    nb = min(50, max(1, nb_threads))
+
     i = 0
 
     part = int(round(len(values) / nb))
@@ -143,7 +146,12 @@ def arg_parse(args):
                       default=port)
     parser.add_option("--protocol", dest="protocol",
                       help="protocol http / https, default: http",
+                      type="string",
                       default=protocol)
+    parser.add_option("-t", "--threads", dest="threads",
+                      help="number of threads to do uploads, default 5",
+                      type="int",
+                      default=5)
     parser.add_option("-v", "--verbose", dest="verbose",
                       action="store_true",
                       help="be verbose",
@@ -280,7 +288,7 @@ def api_get(address, auth, ressource, rid):
 
 
 
-def process(fpath, auth, url, run):
+def process(fpath, auth, url, run, nb_threads):
     """Process a file
     """
     if fpath is not None:
@@ -309,7 +317,7 @@ def process(fpath, auth, url, run):
                     values.append(value)
                     break
 
-        uploadvalues(values, auth, url)
+        uploadvalues(values, auth, url, nb_threads)
     sys.stdout.write("\n")
     sys.stdout.flush()
 
@@ -412,7 +420,7 @@ def main():
         check_run(run)
 
         for fpath in files:
-            process(fpath, auth, address, run_id)
+            process(fpath, auth, address, run_id, options.threads)
 
 
 
